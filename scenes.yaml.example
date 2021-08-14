@@ -1,0 +1,46 @@
+- id: 1628778398GZStpGC9CU
+  name: Bed Time 😴 💤 🛏
+  description: Turn most lights off, one lamp on
+  actions:
+    - mac: d0:73:d5:XX:XX:XX
+      state: false
+      brightness: 1966
+      hue: 61531
+      saturation: 0
+      kelvin: 1500
+    - mac: d0:73:d5:XX:XX:XX
+      state: false
+      brightness: 1966
+      hue: 61531
+      saturation: 0
+      kelvin: 1500
+  order: 1
+- id: 1628927598g82obb3NGL
+  name: Cooking 🥦 🥒 🍟
+  description: Kitchen and living room on, quite bright
+  actions:
+    - mac: d0:73:d5:XX:XX:XX
+      state: true
+      brightness: 65535
+      hue: 59711
+      saturation: 0
+      kelvin: 3500
+    - mac: d0:73:d5:XX:XX:XX
+      state: true
+      brightness: 23898
+      hue: 59893
+      saturation: 0
+      kelvin: 3500
+    - mac: d0:73:d5:XX:XX:XX
+      state: false
+      brightness: 1966
+      hue: 61531
+      saturation: 0
+      kelvin: 1500
+    - mac: d0:73:d5:XX:XX:XX
+      state: false
+      brightness: 1966
+      hue: 62987
+      saturation: 0
+      kelvin: 8000
+  order: 10

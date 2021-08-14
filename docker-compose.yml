@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+
+  lights:
+    network_mode: "host" # host mode required for udp multicast to work
+    user: 4600:5000 # user on host for config file permissions
+    build: 
+      dockerfile: ./Dockerfile
+      context: ./lights-api
+    environment: 
+      - CONFIG_PATH=/config
+      - PORT=7070
+    volumes: 
+      - /data/config/lights:/config
+    restart: unless-stopped
