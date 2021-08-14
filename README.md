@@ -11,8 +11,6 @@ A scenes.yaml must exist alongside the binary or at a path given by env `CONFIG_
 
 `cp ./scenes.yaml.example ./scenes.yaml`
 
-
-
 # Api 
 
 Examples of use
@@ -45,8 +43,7 @@ interface lightItem {
   }
 }
 
-//const RecieverUrl = "http://home.phcyso.com/lights/"
-const RecieverUrl = "/lights"
+const RecieverUrl = "http://<path_to_your_server>/lights/"
 function refreshScenes() {
   helpers
     .fetchWithTimeout(`${RecieverUrl}/scenes/list`, { timeout: 5000 })
@@ -100,7 +97,6 @@ function runScene(id: string) {
 }
 
 function deleteScene(id: string) {  
-  console.log(`trying to delete scene: '${id}'`)
   if (id === "") {
     return
   }
@@ -108,7 +104,6 @@ function deleteScene(id: string) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      // 'Content-Type': 'application/x-www-form-urlencoded',
     },
   })
     .then((response) => response.json())
@@ -117,4 +112,37 @@ function deleteScene(id: string) {
       refreshScenes()
     })
 }
+
+
+function saveModifyScene(changedScene: sceneItem) {
+  if (changedScene.name == "") {
+    return
+  }
+  fetch(`${RecieverUrl}/scene/modify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(changedScene),
+  })
+    .then((response) => response.json())
+    .then((d) => {
+      refreshScenes()
+    })
+}
+
+function saveNewScene() {
+  fetch(`${RecieverUrl}/scene/save`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(newScene.value),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      refreshScenes()
+    })
+}
+
 ```
