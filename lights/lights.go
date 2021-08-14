@@ -48,7 +48,6 @@ func (l *Light) refreshLight() error {
 
 func (l Lights) FindLight(mac string) *Light {
 	for i := 0; i < len(allLights); i++ {
-		//log.Println("Checking: '%v' against '%v' \n", mac, l[i].name)
 		if mac == l[i].light.MacAddress() {
 			return l[i]
 		}
@@ -64,7 +63,6 @@ func LoadLights() error {
 	if err != nil {
 		return err
 	}
-	//log.Printf("err: %v, bulbd: %v ", err, bulbs)
 
 	for _, b := range bulbs {
 		state, err := b.GetColorState()
@@ -140,9 +138,7 @@ func RefreshLights() error {
 // CRUD
 
 func LightOff(mac string) error {
-	//log.Printf("Finding light for mac: %v\n", mac)
 	light := allLights.FindLight(mac)
-	//log.Printf("found light: %v\n", mac)
 	if light != nil {
 		return light.light.SetPowerState(false)
 	}
@@ -173,9 +169,7 @@ func AllLightsOn() error {
 }
 
 func LightOn(mac string) error {
-	//log.Printf("Finding light for mac: %v\n", mac)
 	light := allLights.FindLight(mac)
-	//log.Printf("found light: %v\n", light)
 	if light != nil {
 		return light.light.SetPowerState(true)
 	}
@@ -183,7 +177,6 @@ func LightOn(mac string) error {
 }
 
 func SetColour(mac string, hue int, saturation int, brightness int, kelvin int, duration int) error {
-	//log.Printf("Finding light for mac: %v\n", mac)
 	light := allLights.FindLight(mac)
 
 	if light != nil {

@@ -13,7 +13,7 @@ A scenes.yaml must exist alongside the binary or at a path given by env `CONFIG_
 
 # Api 
 
-Examples of use
+Examples of use from typescript. 
 
 ```typescript
 /**
