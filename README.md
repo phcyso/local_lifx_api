@@ -146,3 +146,8 @@ function saveNewScene() {
 }
 
 ```
+
+
+## Releases
+
+Releases are handled using githuib actions and [Goreleaser](https://goreleaser.com)
