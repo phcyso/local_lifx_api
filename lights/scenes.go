@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/2tvenom/golifx"
 	"gopkg.in/yaml.v3"
@@ -64,25 +65,30 @@ func InitScenes(configPath string) error {
 
 func (s Scene) runScene() error {
 	log.Printf("Running scene %v \n", s.SceneName)
-
+	// TODO refactor this to use type functions instead of ding things directly
 	for _, a := range s.Actions {
-		light := allLights.FindLight(a.Mac)
-		if light != nil {
-			err := light.light.SetPowerState(a.State)
-			if err != nil {
-				log.Printf("Unable to set '%v' state on light '%v'", a.State, a.Mac)
-			}
+		l := allLights.FindLight(a.Mac)
+		if l != nil {
+			go func(light *Light, action lightAction) {
+				light.lock.Lock()
+				err := light.light.SetPowerState(a.State)
+				if err != nil {
+					log.Printf("Unable to set '%v' state on light '%v'", a.State, a.Mac)
+				}
 
-			newColour := &golifx.HSBK{
-				Hue:        a.Hue,
-				Saturation: a.Saturation,
-				Brightness: a.Brightness,
-				Kelvin:     a.Kelvin,
-			}
-			err = light.light.SetColorState(newColour, 0)
-			if err != nil {
-				log.Printf("Unable to set '%v' colour on light '%v'", newColour, a.Mac)
-			}
+				newColour := &golifx.HSBK{
+					Hue:        a.Hue,
+					Saturation: a.Saturation,
+					Brightness: a.Brightness,
+					Kelvin:     a.Kelvin,
+				}
+				err = light.light.SetColorState(newColour, 0)
+				if err != nil {
+					log.Printf("Unable to set '%v' colour on light '%v'", newColour, a.Mac)
+				}
+				light.lock.Unlock()
+			}(l, a)
+			time.Sleep(50 * time.Millisecond)
 		} else {
 			log.Printf("Unable to find light '%v'", a.Mac)
 		}

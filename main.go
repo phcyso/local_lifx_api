@@ -94,6 +94,7 @@ func main() {
 	e.GET("/lights/all/on", allLightsOn)
 	e.GET("/light/off/:mac", lightOff)
 	e.GET("/light/on/:mac", lightOn)
+	e.GET("/light/refresh/:mac", refreshLight)
 
 	e.GET("/scenes/list", listscenes)
 	e.GET("/scene/run/:id", triggerScene)
@@ -108,6 +109,10 @@ func main() {
 /* Routes to the various light functions */
 func listLights(c echo.Context) error {
 	return c.JSON(http.StatusOK, lights.ListAllLights())
+}
+
+func refreshLight(c echo.Context) error {
+	return c.JSON(http.StatusOK, lights.RefreshLight(c.Param("mac")))
 }
 
 func lightOn(c echo.Context) error {

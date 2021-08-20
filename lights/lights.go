@@ -3,6 +3,8 @@ package lights
 import (
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/2tvenom/golifx"
 )
@@ -14,6 +16,7 @@ type Light struct {
 	state  bool
 	colour golifx.HSBK
 	group  string
+	lock   sync.Mutex
 }
 type LightResponse struct {
 	Mac    string      `json:"mac"`
@@ -31,6 +34,8 @@ var allLights Lights
 // type functions
 
 func (l *Light) refreshLight() error {
+	l.lock.Lock()
+	defer l.lock.Unlock()
 	state, err := l.light.GetColorState()
 	if err != nil {
 		return fmt.Errorf(fmt.Sprintf("error getting bulb state: %v", err))
@@ -92,6 +97,15 @@ func ListAllLights() []LightResponse {
 
 // refresh
 
+func RefreshLight(mac string) error {
+	if light := allLights.FindLight(mac); light != nil {
+		light.refreshLight()
+	} else {
+		return fmt.Errorf("Not able to find light: %v", mac)
+	}
+	return nil
+}
+
 func RefreshLights() error {
 
 	log.Println("Refreshing lights.")
@@ -111,6 +125,7 @@ func RefreshLights() error {
 			log.Printf("error getting bulb group: %v", err)
 		}
 		if light := allLights.FindLight(b.MacAddress()); light != nil {
+			light.lock.Lock()
 			if groupErr == nil && light.group != group.Label {
 				log.Printf("Light '%v' has new group name: %v. \n", light.name, group.Label)
 				light.group = group.Label
@@ -123,7 +138,7 @@ func RefreshLights() error {
 				log.Printf("Light '%v' has new power state: %v. \n", light.name, state.Power)
 				light.state = state.Power
 			}
-
+			light.lock.Unlock()
 		} else {
 			log.Printf("Found new light: %v. \n", b)
 			newLight := Light{light: b, name: state.Label, state: state.Power, colour: *state.Color, group: group.Label}
@@ -137,48 +152,68 @@ func RefreshLights() error {
 
 // CRUD
 
+func LightOn(mac string) error {
+	light := allLights.FindLight(mac)
+	if light != nil {
+		light.lock.Lock()
+		defer light.lock.Unlock()
+		return light.light.SetPowerState(true)
+	}
+	return fmt.Errorf("unable to find light for mac: %v", mac)
+}
+
 func LightOff(mac string) error {
 	light := allLights.FindLight(mac)
 	if light != nil {
+		light.lock.Lock()
+		defer light.lock.Unlock()
+		light.state = false
 		return light.light.SetPowerState(false)
 	}
 	return fmt.Errorf("unable to find light for mac: %v", mac)
 }
 
 func AllLightsOff() error {
-	var ret error = nil
 	for _, b := range allLights {
-		err := b.light.SetPowerState(false)
-		if err != nil {
-			ret = fmt.Errorf("error setting light power stage")
-			// TODO log better
-		}
+		go func(b *Light) {
+			b.lock.Lock()
+			err := b.light.SetPowerState(false)
+			if err != nil {
+				log.Printf("Error setting power state(false) for '%s'", b.name)
+			} else {
+				b.state = false
+				log.Printf("Set power state(false) for '%s'", b.name)
+
+			}
+			b.lock.Unlock()
+		}(b)
+		time.Sleep(50 * time.Millisecond)
 	}
-	return ret
+	return nil
 }
 func AllLightsOn() error {
-	var ret error = nil
 	for _, b := range allLights {
-		err := b.light.SetPowerState(true)
-		if err != nil {
-			ret = fmt.Errorf("error setting light power stage")
-			// TODO log better
-		}
+		go func(b *Light) {
+			b.lock.Lock()
+			err := b.light.SetPowerState(true)
+			if err != nil {
+				log.Printf("Error setting power state(true) for '%s'", b.name)
+				// TODO log better
+			} else {
+				b.state = true
+				log.Printf("Set power state(true) for '%s'", b.name)
+			}
+			b.lock.Unlock()
+		}(b)
+		time.Sleep(50 * time.Millisecond)
 	}
-	return ret
-}
-
-func LightOn(mac string) error {
-	light := allLights.FindLight(mac)
-	if light != nil {
-		return light.light.SetPowerState(true)
-	}
-	return fmt.Errorf("unable to find light for mac: %v", mac)
+	return nil
 }
 
 func SetColour(mac string, hue int, saturation int, brightness int, kelvin int, duration int) error {
 	light := allLights.FindLight(mac)
-
+	light.lock.Lock()
+	defer light.lock.Unlock()
 	if light != nil {
 		return light.light.SetColorState(&golifx.HSBK{
 			Hue:        uint16(hue),
